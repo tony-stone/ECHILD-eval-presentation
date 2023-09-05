@@ -1,8 +1,7 @@
 # ECHILD github presentation
 
-A presentation on about the potential of using GitHub to manage ECHILD 
-documentation.
+A presentation about the ECHILD record linkage evaluation.
 
 This repo uses GH Actions and Quarto to render a reveal.js presentation 
 and host it on GH Pages at 
-https://ucl-echild.github.io/ECHILD-github-presentation/
+https://tony-stone.github.io/ECHILD-eval-presentation/

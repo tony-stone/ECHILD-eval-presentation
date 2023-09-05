@@ -1,110 +1,173 @@
 ---
-title: "ECHILD: Proposed documentation and code-sharing strategy"
+title: "🤡 Stuck in the middle? 🃏"
+subtitle: "ECHILD: Record linkage evaluation"
 author: "Tony Stone"
-date: last-modified
+date: 2023-09-06
 date-format: "D MMM YYYY"
-bibliography: bibliography.bib
 format: 
   revealjs:
     logo: logo.png
     theme: solarized
 ---
 
-## ADR UK (ECHILD funder)
+## The ECHILD research database {.smaller}
 
-> make administrative data **more accessible** ... 
+* Department for Education (DfE) [identity assigned by DfE]:
+    + National Pupil Database (NPD): Education and social care records (collated 
+    from schools, awarding bodies, local authorities, other social care 
+    providers)
+* NHS England [identity assigned by NHS E]: Healthcare provided by 
+    + Hospitals
+    + Community services, inc. maternity services (not Primary Care)
+    + Mental health services
+* Office for National Statistics [identity assigned by NHS E]: Life-events data
+    + Birth registrations
+    + Death registrations
+* UCL [identities assigned by NHS E]:
+    + Mother - child links (derived from hospital delivery records and birth 
+    notifications)
 
-Objectives
+## Schematic diagram of data flows
 
-*  Champion best practice [in] research-ready data, including **publishing** a guide 
-to its creation and use.
+```{dot}
 
-*  Support the FAIR Guiding Principles *(metadata!)*
+digraph Dataflow {
+  rankdir="LR";
+	labelloc = t;
+	fontname = "Helvetica,Arial,sans-serif";
+	bgcolor = "transparent";
+  node [shape = rectangle, style = filled, fillcolor = Linen];
+  nd_nhse_demographics [label = "Demographics", shape = cylinder, fillcolor = Beige];
+  nd_nhse_data [label = "Health datasets", shape = cylinder, fillcolor = Beige];
+  nd_nhse_link [label = "Linkage process"];
+  nd_nhse_links [label = "Bridge file", shape = folder, fillcolor = Beige];
+  nd_nhse_link_meta [label = "Linkage metadata ❓", shape = folder, fillcolor = Beige];
+  nd_npd_db [label = "NPD", shape = cylinder, fillcolor = Beige];
+  nd_npd_data [label = "data", shape = cylinder, fillcolor = Beige];
+  nd_npd_id [label = "Demographics", shape = folder, fillcolor = Beige];
+  nd_ons_other_holdings [label = "ECHILD", shape = cylinder, fillcolor = Green];
+  nd_ons_ucl_holdings [label = "ECHILD", shape = cylinder, fillcolor = Red];
+  
+	subgraph cluster_nhse {
+	  label = "NHS England";
+	  bgcolor = "lightyellow";
+	  nd_nhse_data;
+		nd_nhse_demographics -> nd_nhse_link;
+		nd_nhse_link -> {nd_nhse_links nd_nhse_link_meta};
+	}
+	
+	subgraph cluster_npd {
+		label = "DfE";
+		bgcolor = "lightblue";
+		nd_npd_db -> {nd_npd_data nd_npd_id};
+  }
+  
+  subgraph cluster_ons {
+		label = "ONS";
+		bgcolor = "lightgreen";
 
-*  Encourage researchers to develop and **share** research concepts such as 
-derived variables.
+		subgraph cluster_ons_ucl {
+	  	label = "UCL area";
+		  bgcolor = "white";
+		  nd_ons_ucl_holdings
+    }
+    
+    subgraph cluster_ons_others {
+	  	label = "Other users";
+		  bgcolor = "white";
+		  nd_ons_other_holdings
+    }
+  }
+  
+  nd_npd_id -> nd_nhse_link;
+  {nd_npd_data nd_nhse_data nd_nhse_links} -> nd_ons_other_holdings
+  {nd_npd_data nd_nhse_data nd_nhse_links nd_nhse_link_meta} -> nd_ons_ucl_holdings
+}
 
-*  Encourage researchers to **share** code, **documentation** 
-and **feedback**
 
-## GitHub
+```
 
-> Git is version control. GitHub is more, much more:
+Where is UCL in all this?
 
-*  Project management
-*  Automation
-*  Web hosting (searchable documentation, tutorials, etc.)
-*  Issue tracking
-*  Discussion boards
+## Stuck in the middle (wrt evaluation)
 
-## Documentation: A single source of truth
+:::: {.columns}
 
-*  Documentation in a single set of text file (a markup language)
-    - multiple output formats (pdf, docx, and html)
-    - automatically published on the web
-    - version controlled (what changed, when, why, who)
+::: {.column width="50%"}
+On one side
 
-**Distributed but centralised**
+* Historically NHS England supplied very little linkage (meta)data
+* NHS England has limited capacity
+* UCL Agreement included "evaluate linkage quality and bias" but __how__ 
+not specified
+:::
 
-*  Anyone can access and work on a (public) GitHub project
-*  ... but we can impose centralised checks and reviews before accepting changes
+::: {.column width="50%"}
+On the other:
 
-## Code sharing
+* Existing (internal) projects wish to understand changes in linkage quality 
+and bias
+* Unspecified, future projects will wish to understand how their analyses are 
+impacted by the linkage
+:::
 
-Aim: One centralised collection of all ECHILD analyses, adequately documented 
-and citeable
+::::
 
-*  <span style="color: #DC3545">TREs: isolated from wider internet</span>
-*  Can only export "final" analysis code (*bla_final_really-final_v2.do*)
-*  Use templates to encourage adequately documentation of code
-*  Automatically use DOIs to enable citation and track use
-*  Link to impact: demonstration of *improving patient care* and/or 
-*public interest*
+## What ECHILD / HOPE studies wish to evaluate {.smaller}
 
-*Not perfect but best endeavours*
+*  Impact of changes in linkage methods between ECHILD v2 -vs- v1:
+    + NHS England's implementation of its Master Patient Service (MPS) - 
+    changed how the same patient is identified across NHS E datasets (esp. in 
+    the absence of a NHS Number)
+    + Demographics from across all NPD tables vs just 1 [spring census] table
+    + Increased data coverage (period) and expanded cohort:
+        - Period: 1984-09-01 to 2023-03-31 vs 1995-09-01 to 2020-03-31 
+        - Cohort: Born 1984-09-01 to 2023-03-31 vs 1995-09-01 to 2020-03-31
+*  Case ascertainment and bias within groups (e.g. more recent birth cohorts, 
+ children with Down's syndrome)
 
-## Difficulties (1 of 2)
 
-*  Learning:
-    - Git 
-        - *Web UI*
-    - Interacting with GitHub 
-        - *Unavoidable!*
-    - GitHub Actions
-        - *Once set up, should require few mods*
-    - Markup languages 
-        - *Visual editors*
+## How we wish to do this?
 
-## Difficulties (2 of 2)
+Building on GUILD:
 
-*  Getting people (internal and external) to use it
-    - policy, guidance and expectations on sharing code
-    - internal training (UCL 
-    [DSD](https://www.ucl.ac.uk/isd/services/learning-teaching/learning-teaching-services/digital-skills-development) 
-    and 
-    [ARC](https://www.ucl.ac.uk/advanced-research-computing/advanced-research-computing-centre) groups)
-    - signposting to external resources
-    - tutorials / vignettes
-    - templates
-        
-## Examples
+*  ~~using a gold standard dataset to quantify false matches and missed 
+matches~~ [unavailable]
+*  comparing characteristics of linked and unlinked data to identify potential 
+sources of bias
+*  using sensitivity analyses to evaluate how sensitive results are to changes 
+in linkage procedure.
 
-*  Ministry of Justice Analytical Services Platform Team
-    - <https://github.com/moj-analytical-services/user-guidance>
-*  OpenSAFELY
-    - <https://github.com/opensafely>
+Also: 
 
-## Feedback
+*  Ecological level comparisons: comparison with small area census counts by 
+demographic characteristics.
 
-*  Your thoughts
-*  Your input matters
+## What we require {.smaller}
 
-**No system thrives unless it is used!**
+Linkage sensitivity analyses:
 
-## References / Links
+*  Information on the strength of a match (deterministic only) ✔️
 
-*  [@ADR]
-*  [@FAIR]
-*  [@GitHub]
-*  [@DSD]
-*  [@ARC]
+NHS England's change to internal linkage method (MPS)
+
+*  Representative dataset with both old and new (MPS) linkage method applied ✔️
+
+For eval of impact of using identifiers from all NPD tables & impact of 
+increased data coverage and expanded cohort:
+
+*  Information on the distribution of identifiers across NPD tables and their 
+individual strength of a match / non-match ❓ [TBC]
+
+
+## Wider Questions
+
+* What linkage (meta)data is currently made available by different state-backed 
+linkage providers?
+
+* Beyond GUILD, what linkage (meta)data should routinely be made available by 
+state-backed linkage providers?
+
+* Merge-split issues are likely to impact many routine data analyses (whether 
+linkage is implicit or explicit). What metadata should we request from all data 
+providers to evaluate this?
